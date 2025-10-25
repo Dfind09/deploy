@@ -20,11 +20,3 @@ _teammates for sports • competitions • projects_
 **DB**: SQLite(dev) → PostgreSQL(prod)
 
 ---
-
-## Quick Start
-```bash
-git clone <YOUR_REPO_URL> dfind && cd dfind
-python -m venv .venv && source .venv/bin/activate  # Win: .venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env  # 아래 예시 참고
-python app.py  # http://localhost:5000
