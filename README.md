@@ -32,9 +32,9 @@ D.Find/
 │   │   ├── style.css
 │   │   └── message.css
 │   │
-│   └── js/
-│       └── main.js
-│
+│   ├── js/
+│   │   └── main.js
+│   └──uploads            # uploaded images wil be saved at here!
 ├── templates/
 │       ├── index.html
 │       └── message.html
