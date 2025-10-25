@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D.Find - 디미고 팟 모집</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@0.395.0/dist/umd/lucide.min.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="min-h-screen bg-black text-gray-300">
+
+    <header class="bg-gradient-to-r from-black to-gray-900 border-b border-pink-600 sticky top-0 z-50 shadow-lg shadow-pink-600/20">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <h1 id="logo" class="text-4xl font-black bg-gradient-to-r from-pink-500 to-pink-400 bg-clip-text text-transparent cursor-pointer hover:from-pink-400 hover:to-pink-500 transition">
+                        D.Find
+                    </h1>
+                    <p class="text-sm text-gray-400 hidden md:block">디미고 팟 모집 플랫폼</p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                        <input
+                            type="text"
+                            id="search-input"
+                            placeholder="검색..."
+                            class="pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg w-48 md:w-64 focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                        />
+                    </div>
+                    
+                    <div id="auth-buttons-container" class="flex items-center gap-3">
+                        </div>
+
+                    <button
+                        id="open-new-post-modal-btn"
+                        class="bg-gradient-to-r from-pink-600 to-pink-500 text-white px-5 py-2 rounded-lg hover:from-pink-500 hover:to-pink-600 transition flex items-center gap-2 font-bold shadow-lg shadow-pink-600/30"
+                    >
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                        <span class="hidden md:inline">팟 모집하기</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <aside class="lg:col-span-1">
+                <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-xl border border-pink-600/30 p-4 sticky top-24">
+                    <h2 class="font-black text-xl mb-4 flex items-center gap-2 text-pink-500">
+                        <i data-lucide="users" class="w-6 h-6"></i>
+                        갤러리
+                    </h2>
+                    <nav id="gallery-nav" class="space-y-1">
+                        </nav>
+                </div>
+            </aside>
+
+            <main class="lg:col-span-3">
+                <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-xl border border-pink-600/30">
+                    <div class="p-5 border-b border-gray-800">
+                        <h2 id="main-content-title" class="font-black text-2xl text-white">
+                            전체 팟 모집
+                        </h2>
+                    </div>
+                    <div id="post-list-container" class="divide-y divide-gray-800">
+                        <div class="p-12 text-center text-gray-500" id="loading-placeholder">
+                            게시글을 불러오는 중입니다...
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="post-detail-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border-2 border-pink-600/50">
+            <div class="p-8">
+                <div class="flex items-start justify-between mb-6">
+                    <div class="flex-1" id="post-detail-header">
+                        </div>
+                    <button id="close-detail-modal-btn" class="text-gray-400 hover:text-pink-400 transition p-2 hover:bg-gray-800 rounded-lg">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <div class="bg-gray-800/30 rounded-xl p-6 mb-6 border border-gray-700">
+                    <p id="post-detail-content" class="text-gray-300 text-base leading-relaxed whitespace-pre-wrap"></p>
+                </div>
+
+                <div id="post-detail-meta" class="flex items-center gap-6 mb-8 text-gray-400">
+                    </div>
+
+                <div id="post-detail-actions" class="grid gap-4">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="new-post-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-pink-600/50">
+            <form id="new-post-form" class="p-8">
+                <h2 class="text-3xl font-black mb-6 text-white">새 팟 모집하기</h2>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">갤러리 선택</label>
+                        <select id="new-post-gallery" name="gallery" required class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white font-medium">
+                            <option value="">갤러리를 선택하세요</option>
+                            </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">제목</label>
+                        <input
+                            type="text"
+                            id="new-post-title"
+                            name="title"
+                            required
+                            placeholder="제목을 입력하세요"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                        />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-pink-400">현재 인원 (본인 포함)</label>
+                            <input
+                                type="number"
+                                id="new-post-current"
+                                name="currentMembers"
+                                min="1"
+                                value="1"
+                                required
+                                placeholder="1"
+                                class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-2 text-pink-400">목표 인원 (총 인원)</label>
+                            <input
+                                type="number"
+                                id="new-post-total"
+                                name="totalMembers"
+                                min="2"
+                                value="2"
+                                required
+                                placeholder="2"
+                                class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">내용</label>
+                        <textarea
+                            id="new-post-content"
+                            name="content"
+                            required
+                            placeholder="내용을 입력하세요"
+                            rows="10"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mt-8">
+                    <button
+                        type="submit"
+                        class="bg-gradient-to-r from-pink-600 to-pink-500 text-white py-4 rounded-xl hover:from-pink-500 hover:to-pink-600 transition font-black text-lg shadow-lg shadow-pink-600/30"
+                    >
+                        등록하기
+                    </button>
+                    <button
+                        type="button"
+                        id="close-new-post-modal-btn"
+                        class="bg-gray-800 text-white py-4 rounded-xl hover:bg-gray-700 transition font-black text-lg border-2 border-gray-700"
+                    >
+                        취소
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="custom-alert-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4 hidden">
+         <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-sm w-full border-2 border-pink-600/50">
+            <div class="p-6 text-center">
+                <h3 id="custom-alert-title" class="text-xl font-bold text-white mb-4">알림</h3>
+                <p id="custom-alert-message" class="text-gray-300 mb-6"></p>
+                <button id="custom-alert-close-btn" class="bg-pink-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-pink-500 transition">
+                    확인
+                </button>
+            </div>
+         </div>
+    </div>
+
+    <div id="login-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-md w-full border-2 border-pink-600/50">
+            <form id="login-form" class="p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-3xl font-black text-white">로그인</h2>
+                    <button type="button" id="close-login-modal-btn" class="text-gray-400 hover:text-pink-400 transition p-2 hover:bg-gray-800 rounded-lg">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">이메일</label>
+                        <input
+                            type="email"
+                            id="login-email"
+                            name="email"
+                            required
+                            placeholder="your-email@dimigo.hs.kr"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">비밀번호</label>
+                        <input
+                            type="password"
+                            id="login-password"
+                            name="password"
+                            required
+                            placeholder="비밀번호"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                        />
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <button
+                        type="submit"
+                        class="w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-4 rounded-xl hover:from-pink-500 hover:to-pink-600 transition font-black text-lg shadow-lg shadow-pink-600/30"
+                    >
+                        로그인
+                    </button>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <button type="button" id="toggle-to-register" class="text-sm text-gray-400 hover:text-pink-400 transition">
+                        계정이 없으신가요? <span class="font-bold">회원가입</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="register-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-md w-full border-2 border-pink-600/50">
+            <form id="register-form" class="p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-3xl font-black text-white">회원가입</h2>
+                    <button type="button" id="close-register-modal-btn" class="text-gray-400 hover:text-pink-400 transition p-2 hover:bg-gray-800 rounded-lg">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">이름</label>
+                        <input
+                            type="text"
+                            id="register-username"
+                            name="username"
+                            required
+                            placeholder="사용하실 이름을 입력하세요"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">디미고 이메일</label>
+                        <input
+                            type="email"
+                            id="register-email"
+                            name="email"
+                            required
+                            placeholder="your-email@dimigo.hs.kr"
+                            pattern=".+@dimigo\.hs\.kr"
+                            title="디미고 이메일(@dimigo.hs.kr)만 사용 가능합니다."
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">비밀번호</label>
+                        <input
+                            type="password"
+                            id="register-password"
+                            name="password"
+                            required
+                            placeholder="비밀번호"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                        />
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <button
+                        type="submit"
+                        class="w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-4 rounded-xl hover:from-pink-500 hover:to-pink-600 transition font-black text-lg shadow-lg shadow-pink-600/30"
+                    >
+                        회원가입
+                    </button>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <button type="button" id="toggle-to-login" class="text-sm text-gray-400 hover:text-pink-400 transition">
+                        이미 계정이 있으신가요? <span class="font-bold">로그인</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
