@@ -20,3 +20,25 @@ _teammates for sports • competitions • projects_
 **DB**: SQLite(dev) → PostgreSQL(prod)
 
 ---
+
+## struct
+
+## 📁 Project Structure
+
+```plaintext
+D.Find/
+├── static/
+│   ├── css/
+│   │   ├── style.css
+│   │   └── message.css
+│   │
+│   └── js/
+│       └── main.js
+│
+├── templates/
+│       ├── index.html
+│       └── message.html
+│
+├── app.py
+├── .env
+└── requirements.txt
