@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D.Find - 디미고 팟 모집</title>
+    <title>D.Find - 디미고 팟 모집 & 커뮤니티</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@0.395.0/dist/umd/lucide.min.js"></script>
-
+    
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="min-h-screen bg-black text-gray-300">
@@ -18,7 +19,7 @@
                     <h1 id="logo" class="text-4xl font-black bg-gradient-to-r from-pink-500 to-pink-400 bg-clip-text text-transparent cursor-pointer hover:from-pink-400 hover:to-pink-500 transition">
                         D.Find
                     </h1>
-                    <p class="text-sm text-gray-400 hidden md:block">디미고 팟 모집 플랫폼</p>
+                    <p class="text-sm text-gray-400 hidden md:block">디미고 팟 모집 & 커뮤니티</p>
                 </div>
                 
                 <div class="flex items-center gap-3">
@@ -32,15 +33,22 @@
                         />
                     </div>
                     
-                    <div id="auth-buttons-container" class="flex items-center gap-3">
-                        </div>
+                    <button
+                        id="open-chat-list-btn"
+                        class="relative bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition border-2 border-gray-700 hidden"
+                    >
+                        <i data-lucide="message-square" class="w-5 h-5"></i>
+                        <span id="chat-badge" class="absolute -top-1 -right-1 bg-pink-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                    </button>
+                    
+                    <div id="auth-buttons-container" class="flex items-center gap-3"></div>
 
                     <button
-                        id="open-new-post-modal-btn"
+                        id="open-new-content-modal-btn" 
                         class="bg-gradient-to-r from-pink-600 to-pink-500 text-white px-5 py-2 rounded-lg hover:from-pink-500 hover:to-pink-600 transition flex items-center gap-2 font-bold shadow-lg shadow-pink-600/30"
                     >
                         <i data-lucide="plus" class="w-5 h-5"></i>
-                        <span class="hidden md:inline">팟 모집하기</span>
+                        <span id="new-content-btn-text" class="hidden md:inline">새 글쓰기</span>
                     </button>
                 </div>
             </div>
@@ -53,11 +61,9 @@
             <aside class="lg:col-span-1">
                 <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-xl border border-pink-600/30 p-4 sticky top-24">
                     <h2 class="font-black text-xl mb-4 flex items-center gap-2 text-pink-500">
-                        <i data-lucide="users" class="w-6 h-6"></i>
-                        갤러리
+                        <i data-lucide="layout-grid" class="w-6 h-6"></i> 카테고리
                     </h2>
-                    <nav id="gallery-nav" class="space-y-1">
-                        </nav>
+                    <nav id="gallery-nav" class="space-y-1"></nav>
                 </div>
             </aside>
 
@@ -82,22 +88,16 @@
         <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border-2 border-pink-600/50">
             <div class="p-8">
                 <div class="flex items-start justify-between mb-6">
-                    <div class="flex-1" id="post-detail-header">
-                        </div>
+                    <div class="flex-1" id="post-detail-header"></div>
                     <button id="close-detail-modal-btn" class="text-gray-400 hover:text-pink-400 transition p-2 hover:bg-gray-800 rounded-lg">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
-
                 <div class="bg-gray-800/30 rounded-xl p-6 mb-6 border border-gray-700">
                     <p id="post-detail-content" class="text-gray-300 text-base leading-relaxed whitespace-pre-wrap"></p>
                 </div>
-
-                <div id="post-detail-meta" class="flex items-center gap-6 mb-8 text-gray-400">
-                    </div>
-
-                <div id="post-detail-actions" class="grid gap-4">
-                    </div>
+                <div id="post-detail-meta" class="flex items-center gap-6 mb-8 text-gray-400"></div>
+                <div id="post-detail-actions" class="grid gap-4"></div>
             </div>
         </div>
     </div>
@@ -106,89 +106,183 @@
         <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-pink-600/50">
             <form id="new-post-form" class="p-8">
                 <h2 class="text-3xl font-black mb-6 text-white">새 팟 모집하기</h2>
-                
                 <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-bold mb-2 text-pink-400">갤러리 선택</label>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">카테고리 선택</label>
                         <select id="new-post-gallery" name="gallery" required class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white font-medium">
-                            <option value="">갤러리를 선택하세요</option>
-                            </select>
+                            <option value="">카테고리를 선택하세요</option>
+                        </select>
                     </div>
-
                     <div>
                         <label class="block text-sm font-bold mb-2 text-pink-400">제목</label>
-                        <input
-                            type="text"
-                            id="new-post-title"
-                            name="title"
-                            required
-                            placeholder="제목을 입력하세요"
-                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
-                        />
+                        <input type="text" id="new-post-title" name="title" required placeholder="제목을 입력하세요"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"/>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-bold mb-2 text-pink-400">현재 인원 (본인 포함)</label>
-                            <input
-                                type="number"
-                                id="new-post-current"
-                                name="currentMembers"
-                                min="1"
-                                value="1"
-                                required
-                                placeholder="1"
-                                class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
-                            />
+                            <input type="number" id="new-post-current" name="currentMembers" min="1" value="1" required placeholder="1"
+                                class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"/>
                         </div>
                         <div>
                             <label class="block text-sm font-bold mb-2 text-pink-400">목표 인원 (총 인원)</label>
-                            <input
-                                type="number"
-                                id="new-post-total"
-                                name="totalMembers"
-                                min="2"
-                                value="2"
-                                required
-                                placeholder="2"
-                                class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
-                            />
+                            <input type="number" id="new-post-total" name="totalMembers" min="2" value="2" required placeholder="2"
+                                class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"/>
                         </div>
                     </div>
-
                     <div>
                         <label class="block text-sm font-bold mb-2 text-pink-400">내용</label>
-                        <textarea
-                            id="new-post-content"
-                            name="content"
-                            required
-                            placeholder="내용을 입력하세요"
-                            rows="10"
-                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
-                        ></textarea>
+                        <textarea id="new-post-content" name="content" required placeholder="내용을 입력하세요" rows="10"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"></textarea>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4 mt-8">
-                    <button
-                        type="submit"
-                        class="bg-gradient-to-r from-pink-600 to-pink-500 text-white py-4 rounded-xl hover:from-pink-500 hover:to-pink-600 transition font-black text-lg shadow-lg shadow-pink-600/30"
-                    >
+                    <button type="submit"
+                        class="bg-gradient-to-r from-pink-600 to-pink-500 text-white py-4 rounded-xl hover:from-pink-500 hover:to-pink-600 transition font-black text-lg shadow-lg shadow-pink-600/30">
                         등록하기
                     </button>
-                    <button
-                        type="button"
-                        id="close-new-post-modal-btn"
-                        class="bg-gray-800 text-white py-4 rounded-xl hover:bg-gray-700 transition font-black text-lg border-2 border-gray-700"
-                    >
+                    <button type="button" id="close-new-post-modal-btn"
+                        class="bg-gray-800 text-white py-4 rounded-xl hover:bg-gray-700 transition font-black text-lg border-2 border-gray-700">
                         취소
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <div id="chat-list-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-pink-600/50">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-3xl font-black text-white flex items-center gap-3">
+                        <i data-lucide="message-square" class="w-8 h-8 text-pink-500"></i>
+                        채팅
+                    </h2>
+                    <button id="close-chat-list-modal-btn" class="text-gray-400 hover:text-pink-400 transition p-2 hover:bg-gray-800 rounded-lg">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div id="chat-list-container" class="space-y-3">
+                    <div class="p-12 text-center text-gray-500">채팅방이 없습니다.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-detail-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4 hidden">
+        <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-2xl w-full h-[80vh] border-2 border-pink-600/50 flex flex-col">
+            <div class="p-6 border-b border-gray-800 flex items-center justify-between">
+                <div id="chat-detail-header" class="flex-1">
+                    <h3 class="text-xl font-black text-white mb-1" id="chat-other-user-name">로딩중...</h3>
+                    <p class="text-sm text-gray-400" id="chat-post-title">게시글</p>
+                </div>
+                <button id="close-chat-detail-modal-btn" class="text-gray-400 hover:text-pink-400 transition p-2 hover:bg-gray-800 rounded-lg">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div id="chat-messages-container" class="flex-1 overflow-y-auto p-6 space-y-4">
+                <div class="text-center text-gray-500 py-8">메시지를 불러오는 중...</div>
+            </div>
+            <div class="p-6 border-t border-gray-800">
+                <form id="chat-message-form" class="flex gap-3">
+                    <input type="text" id="chat-message-input" placeholder="메시지를 입력하세요..." required
+                        class="flex-1 p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"/>
+                    <button type="submit"
+                        class="bg-gradient-to-r from-pink-600 to-pink-500 text-white px-6 py-4 rounded-lg hover:from-pink-500 hover:to-pink-600 transition font-black shadow-lg shadow-pink-600/30 flex items-center gap-2">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                        전송
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
     
-    <div id="custom-alert-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4 hidden">
+    <div id="new-community-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-pink-600/50">
+            <form id="community-form" class="p-8">
+                <h2 class="text-3xl font-black mb-6 text-white">커뮤니티 새 글 작성</h2>
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">제목</label>
+                        <input type="text" name="title" required placeholder="제목을 입력하세요"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">내용</label>
+                        <textarea name="content" required rows="8" placeholder="내용을 입력하세요"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">이미지 업로드 (선택)</label>
+                        <input type="file" name="image" accept="image/*"
+                            class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-pink-600 file:text-white hover:file:bg-pink-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mt-8">
+                    <button type="submit"
+                        class="bg-gradient-to-r from-pink-600 to-pink-500 text-white py-4 rounded-xl hover:from-pink-500 hover:to-pink-600 font-black text-lg shadow-lg shadow-pink-600/30">
+                        등록하기
+                    </button>
+                    <button type="button" id="close-new-community-modal"
+                        class="bg-gray-800 text-white py-4 rounded-xl hover:bg-gray-700 font-black text-lg border-2 border-gray-700">
+                        취소
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="community-detail-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-3xl w-full border-2 border-pink-600/50 flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-gray-800 flex-shrink-0">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 id="community-detail-title" class="text-2xl font-black text-white flex-1 mr-4"></h3>
+                    
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button id="community-detail-delete-btn"
+                            class="hidden bg-red-800 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            삭제
+                        </button>
+                        <button id="close-community-detail-modal" class="text-gray-400 hover:text-pink-400 transition p-2 hover:bg-gray-800 rounded-lg">
+                            <i data-lucide="x" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 text-sm text-gray-400">
+                    <span id="community-detail-author"></span>
+                    <span>•</span>
+                    <span id="community-detail-timestamp"></span>
+                    <span>•</span>
+                    <span id="community-detail-views" class="flex items-center gap-1"></span>
+                </div>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-grow">
+                <img id="community-detail-image" src="" alt="게시글 이미지" class="w-full rounded-lg mb-6 hidden max-h-[50vh] object-contain">
+                <p id="community-detail-content" class="text-gray-300 whitespace-pre-wrap leading-relaxed mb-8"></p>
+
+                <div class="border-t border-gray-800 pt-6">
+                    <h4 class="text-lg font-bold text-white mb-4">댓글</h4>
+                    <div id="community-detail-comment-list" class="space-y-4 mb-6">
+                        </div>
+                    <form id="comment-form" class="hidden">
+                        <textarea id="comment-content" rows="3" placeholder="댓글을 입력하세요..."
+                            class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"></textarea>
+                        <div class="text-right mt-3">
+                            <button type="submit"
+                                class="bg-pink-600 text-white py-2 px-5 rounded-lg hover:bg-pink-500 transition font-bold shadow-lg shadow-pink-600/30">
+                                댓글 등록
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="custom-alert-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[70] p-4 hidden">
          <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-sm w-full border-2 border-pink-600/50">
             <div class="p-6 text-center">
                 <h3 id="custom-alert-title" class="text-xl font-bold text-white mb-4">알림</h3>
@@ -209,41 +303,24 @@
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
-                
                 <div class="space-y-5">
                     <div>
                         <label class="block text-sm font-bold mb-2 text-pink-400">이메일</label>
-                        <input
-                            type="email"
-                            id="login-email"
-                            name="email"
-                            required
-                            placeholder="your-email@dimigo.hs.kr"
-                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
-                        />
+                        <input type="email" id="login-email" name="email" required placeholder="your-email@dimigo.hs.kr"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"/>
                     </div>
                     <div>
                         <label class="block text-sm font-bold mb-2 text-pink-400">비밀번호</label>
-                        <input
-                            type="password"
-                            id="login-password"
-                            name="password"
-                            required
-                            placeholder="비밀번호"
-                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
-                        />
+                        <input type="password" id="login-password" name="password" required placeholder="비밀번호"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"/>
                     </div>
                 </div>
-
                 <div class="mt-8">
-                    <button
-                        type="submit"
-                        class="w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-4 rounded-xl hover:from-pink-500 hover:to-pink-600 transition font-black text-lg shadow-lg shadow-pink-600/30"
-                    >
+                    <button type="submit"
+                        class="w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-4 rounded-xl hover:from-pink-500 hover:to-pink-600 transition font-black text-lg shadow-lg shadow-pink-600/30">
                         로그인
                     </button>
                 </div>
-                
                 <div class="mt-4 text-center">
                     <button type="button" id="toggle-to-register" class="text-sm text-gray-400 hover:text-pink-400 transition">
                         계정이 없으신가요? <span class="font-bold">회원가입</span>
@@ -262,54 +339,30 @@
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
-                
                 <div class="space-y-5">
                     <div>
                         <label class="block text-sm font-bold mb-2 text-pink-400">이름</label>
-                        <input
-                            type="text"
-                            id="register-username"
-                            name="username"
-                            required
-                            placeholder="사용하실 이름을 입력하세요"
-                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
-                        />
+                        <input type="text" id="register-username" name="username" required placeholder="사용하실 이름을 입력하세요"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"/>
                     </div>
                     <div>
                         <label class="block text-sm font-bold mb-2 text-pink-400">디미고 이메일</label>
-                        <input
-                            type="email"
-                            id="register-email"
-                            name="email"
-                            required
-                            placeholder="your-email@dimigo.hs.kr"
-                            pattern=".+@dimigo\.hs\.kr"
-                            title="디미고 이메일(@dimigo.hs.kr)만 사용 가능합니다."
-                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
-                        />
+                        <input type="email" id="register-email" name="email" required placeholder="your-email@dimigo.hs.kr"
+                            pattern=".+@dimigo\.hs\.kr" title="디미고 이메일(@dimigo.hs.kr)만 사용 가능합니다."
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"/>
                     </div>
                     <div>
                         <label class="block text-sm font-bold mb-2 text-pink-400">비밀번호</label>
-                        <input
-                            type="password"
-                            id="register-password"
-                            name="password"
-                            required
-                            placeholder="비밀번호"
-                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
-                        />
+                        <input type="password" id="register-password" name="password" required placeholder="비밀번호"
+                            class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"/>
                     </div>
                 </div>
-
                 <div class="mt-8">
-                    <button
-                        type="submit"
-                        class="w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-4 rounded-xl hover:from-pink-500 hover:to-pink-600 transition font-black text-lg shadow-lg shadow-pink-600/30"
-                    >
+                    <button type="submit"
+                        class="w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-4 rounded-xl hover:from-pink-500 hover:to-pink-600 transition font-black text-lg shadow-lg shadow-pink-600/30">
                         회원가입
                     </button>
                 </div>
-
                 <div class="mt-4 text-center">
                     <button type="button" id="toggle-to-login" class="text-sm text-gray-400 hover:text-pink-400 transition">
                         이미 계정이 있으신가요? <span class="font-bold">로그인</span>
