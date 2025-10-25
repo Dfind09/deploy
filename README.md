@@ -35,6 +35,7 @@ D.Find/
 │   ├── js/
 │   │   └── main.js
 │   └──uploads            # uploaded images wil be saved at here!
+│
 ├── templates/
 │       ├── index.html
 │       └── message.html
