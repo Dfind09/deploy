@@ -1,0 +1,13 @@
+/* [분리] index.html에서 분리된 스타일 */
+
+/* 기본 글꼴 설정 */
+body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+}
+/* Lucide 아이콘 크기/정렬 보정 */
+[data-lucide] {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+    display: inline-block;
+}
