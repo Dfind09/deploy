@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - D.Find</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/message.css') }}">
+</head>
+<body class="bg-black text-gray-300 flex items-center justify-center min-h-screen">
+    <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-md w-full border-2 border-pink-600/50 p-8 text-center">
+        <h1 class="text-3xl font-black mb-6 text-white">{{ title }}</h1>
+        <p class="text-lg text-gray-300 mb-8">{{ message }}</p>
+        <a href="/" class="bg-gradient-to-r from-pink-600 to-pink-500 text-white py-3 px-6 rounded-xl hover:from-pink-500 hover:to-pink-600 transition font-black text-lg shadow-lg shadow-pink-600/30">
+            홈으로 돌아가기
+        </a>
+    </div>
+</body>
+</html>
