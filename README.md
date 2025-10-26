@@ -35,7 +35,10 @@ D.Find/
 │   ├── js/
 │   │   └── main.js
 │   │
-│   └──uploads            # uploaded images wil be saved at here!
+│   ├── profiles/          # your profile image will be saved at here!
+│   ├── uploads/           # uploaded images will be saved at here!
+│   ├── default-avatar.png
+│   └── logo.svg
 │
 ├── templates/
 │       ├── index.html
@@ -43,4 +46,5 @@ D.Find/
 │
 ├── app.py
 ├── .env
+├── seed_database.py
 └── requirements.txt
