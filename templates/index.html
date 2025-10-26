@@ -4,15 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D.Find - 디미고 팟 모집 & 커뮤니티</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@0.395.0/dist/umd/lucide.min.js"></script>
-    
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="svg" href="{{ url_for('static', filename='logo.svg') }}">
 </head>
-<body class="min-h-screen bg-black text-gray-300">
+<body class="h-screen bg-black text-gray-300 flex flex-col overflow-hidden">
 
-    <header class="bg-gradient-to-r from-black to-gray-900 border-b border-pink-600 sticky top-0 z-50 shadow-lg shadow-pink-600/20">
+    <header class="bg-gradient-to-r from-black to-gray-900 border-b border-pink-600 top-0 z-50 shadow-lg shadow-pink-600/20 flex-shrink-0">
         <div class="max-w-7xl mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
@@ -27,8 +33,8 @@
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
                         <input
                             type="text"
-                            id="search-input"
-                            placeholder="검색..."
+                            id="header-search-input"
+                            placeholder="팟/커뮤니티 검색..."
                             class="pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg w-48 md:w-64 focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
                         />
                     </div>
@@ -55,32 +61,119 @@
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 py-6">
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div class="max-w-7xl mx-auto px-4 w-full flex-1 overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full py-6">
             
-            <aside class="lg:col-span-1">
-                <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-xl border border-pink-600/30 p-4 sticky top-24">
+            <aside class="lg:col-span-1 overflow-y-auto custom-scrollbar">
+                <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-xl border border-pink-600/30 p-4">
                     <h2 class="font-black text-xl mb-4 flex items-center gap-2 text-pink-500">
-                        <i data-lucide="layout-grid" class="w-6 h-6"></i> 카테고리
+                        <i data-lucide="compass" class="w-6 h-6"></i> 탐색
                     </h2>
-                    <nav id="gallery-nav" class="space-y-1"></nav>
+                    <nav class="space-y-1 mb-4">
+                        <button
+                            id="nav-main-pods"
+                            data-view="pods"
+                            class="main-nav-btn w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 font-bold bg-gradient-to-r from-pink-600 to-pink-500 text-white shadow-lg shadow-pink-600/30"
+                        >
+                            <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                            팟 / 커뮤니티
+                        </button>
+                        <button
+                            id="nav-main-users"
+                            data-view="users"
+                            class="main-nav-btn w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3 font-bold text-gray-300 hover:bg-gray-800/50 hover:text-pink-400"
+                        >
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                            유저 찾기
+                        </button>
+                    </nav>
+                    
+                    <div id="gallery-nav-container">
+                        <h3 class="font-bold text-lg mb-2 text-pink-400 border-t border-gray-700 pt-3">카테고리</h3>
+                        <nav id="gallery-nav" class="space-y-1"></nav>
+                    </div>
+
+                    <div id="skill-nav-container" class="hidden">
+                         <h3 class="font-bold text-lg mb-2 text-pink-400 border-t border-gray-700 pt-3">스킬 분야</h3>
+                         <nav id="skill-category-list" class="space-y-1"></nav>
+                    </div>
                 </div>
             </aside>
 
-            <main class="lg:col-span-3">
-                <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-xl border border-pink-600/30">
-                    <div class="p-5 border-b border-gray-800">
-                        <h2 id="main-content-title" class="font-black text-2xl text-white">
-                            전체 팟 모집
-                        </h2>
-                    </div>
-                    <div id="post-list-container" class="divide-y divide-gray-800">
-                        <div class="p-12 text-center text-gray-500" id="loading-placeholder">
-                            게시글을 불러오는 중입니다...
+            <main class="lg:col-span-3 overflow-y-auto custom-scrollbar">
+                <div id="pod-community-view">
+                    <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-xl border border-pink-600/30">
+                        <div class="p-5 border-b border-gray-800">
+                            <h2 id="main-content-title" class="font-black text-2xl text-white">
+                                전체 팟 모집
+                            </h2>
+                        </div>
+                        <div id="post-list-container" class="divide-y divide-gray-800">
+                            <div class="p-12 text-center text-gray-500" id="loading-placeholder">
+                                게시글을 불러오는 중입니다...
+                            </div>
                         </div>
                     </div>
                 </div>
-            </main>
+
+                <div id="user-search-view" class="hidden">
+                    <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-xl border border-pink-600/30">
+                        <div class="p-5 border-b border-gray-800">
+                            <div class="flex border-b border-gray-700 mb-4">
+                                <button id="user-search-tab-skill" data-mode="skill" class="user-search-tab px-6 py-3 font-bold text-lg border-b-2 border-pink-500 text-pink-400">
+                                    스킬로 찾기
+                                </button>
+                                <button id="user-search-tab-name" data-mode="name" class="user-search-tab px-6 py-3 font-bold text-lg border-b-2 border-transparent text-gray-500 hover:text-pink-400 hover:border-pink-500/50 transition">
+                                    이름으로 찾기
+                                </button>
+                                <button id="user-search-tab-recommend" data-mode="recommend" class="user-search-tab px-6 py-3 font-bold text-lg border-b-2 border-transparent text-gray-500 hover:text-pink-400 hover:border-pink-500/50 transition">
+                                    <i data-lucide="sparkles" class="w-5 h-5 inline-block -mt-1 mr-2 text-pink-500"></i>팀원 추천
+                                </button>
+                            </div>
+                            
+                            <h2 id="user-search-title" class="font-black text-2xl text-white mb-1">
+                                스킬로 유저 찾기
+                            </h2>
+                            <p id="user-search-description" class="text-gray-400">찾고 싶은 스킬을 선택하거나 검색하세요.</p>
+                            
+                            <div id="skill-search-container" class="relative mt-4">
+                                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                                <input
+                                    type="text"
+                                    id="skill-search-input"
+                                    placeholder="스킬 검색 (예: 웹, 리버싱, AI)"
+                                    class="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                                />
+                                <div id="skill-autocomplete-list" class="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg z-10 max-h-60 overflow-y-auto hidden">
+                                    </div>
+                            </div>
+                            
+                            <div id="name-search-container" class="relative mt-4 hidden">
+                                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4"></i>
+                                <input
+                                    type="text"
+                                    id="name-search-input"
+                                    placeholder="유저 이름 또는 표시 이름 검색..."
+                                    class="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"
+                                />
+                            </div>
+
+                            <div id="recommendation-container" class="relative mt-4 hidden">
+                                <label class="block text-sm font-bold mb-2 text-pink-400">참가할 대회 분야 선택</label>
+                                <select id="recommendation-category-select" class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white font-medium">
+                                    <option value="">분야를 선택하세요</option>
+                                    </select>
+                            </div>
+
+                        </div>
+                        <div id="user-list-container" class="divide-y divide-gray-800">
+                             <div class="p-12 text-center text-gray-500" id="user-loading-placeholder">
+                                스킬을 선택하거나 검색해보세요.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </main>
         </div>
     </div>
 
@@ -172,9 +265,9 @@
     <div id="chat-detail-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4 hidden">
         <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-2xl w-full h-[80vh] border-2 border-pink-600/50 flex flex-col">
             <div class="p-6 border-b border-gray-800 flex items-center justify-between">
-                <div id="chat-detail-header" class="flex-1">
-                    <h3 class="text-xl font-black text-white mb-1" id="chat-other-user-name">로딩중...</h3>
-                    <p class="text-sm text-gray-400" id="chat-post-title">게시글</p>
+                <div id="chat-detail-header" class="flex-1 min-w-0">
+                    <h3 class="text-xl font-black text-white mb-1 truncate" id="chat-other-user-name">로딩중...</h3>
+                    <p class="text-sm text-gray-400 truncate" id="chat-post-title">게시글</p>
                 </div>
                 <button id="close-chat-detail-modal-btn" class="text-gray-400 hover:text-pink-400 transition p-2 hover:bg-gray-800 rounded-lg">
                     <i data-lucide="x" class="w-6 h-6"></i>
@@ -250,7 +343,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-4 text-sm text-gray-400">
-                    <span id="community-detail-author"></span>
+                    <span id="community-detail-author" class="author-link cursor-pointer hover:text-pink-400 transition"></span>
                     <span>•</span>
                     <span id="community-detail-timestamp"></span>
                     <span>•</span>
@@ -264,8 +357,7 @@
 
                 <div class="border-t border-gray-800 pt-6">
                     <h4 class="text-lg font-bold text-white mb-4">댓글</h4>
-                    <div id="community-detail-comment-list" class="space-y-4 mb-6">
-                        </div>
+                    <div id="community-detail-comment-list" class="space-y-4 mb-6"></div>
                     <form id="comment-form" class="hidden">
                         <textarea id="comment-content" rows="3" placeholder="댓글을 입력하세요..."
                             class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"></textarea>
@@ -281,6 +373,142 @@
         </div>
     </div>
 
+    <div id="profile-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-4xl w-full border-2 border-pink-600/50 max-h-[90vh] overflow-y-auto">
+            <div class="p-8">
+                <div class="flex items-start justify-between mb-6">
+                    <h2 class="text-3xl font-black text-white">프로필</h2>
+                    <button id="close-profile-modal" class="text-gray-400 hover:text-pink-400 transition p-2 hover:bg-gray-800 rounded-lg">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <div id="profile-view" class="space-y-6">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-6">
+                            <img id="profile-view-picture" src="/static/default-avatar.png" alt="프로필 사진"
+                                class="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-pink-600 object-cover">
+                            <div class="flex-1">
+                                <h3 id="profile-view-display-name" class="text-2xl font-bold text-white mb-2"></h3>
+                                <p id="profile-view-username" class="text-gray-400 mb-1"></p>
+                                <p id="profile-view-student-id" class="text-gray-500 text-sm"></p>
+                            </div>
+                        </div>
+                        <button id="send-dm-btn" class="hidden bg-gray-800 text-white py-2 px-4 rounded-xl hover:bg-gray-700 transition font-bold text-sm flex items-center justify-center gap-2 border-2 border-gray-700 flex-shrink-0">
+                            <i data-lucide="message-circle" class="w-4 h-4"></i>
+                            메시지 보내기
+                        </button>
+                    </div>
+                    <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-sm font-bold text-pink-400 mb-2">소개</h4>
+                        <p id="profile-view-bio" class="text-gray-300 whitespace-pre-wrap"></p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-bold text-pink-400">활동 통계</h4>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700 text-center">
+                                    <p class="text-2xl font-bold text-pink-500" id="profile-view-posts">0</p>
+                                    <p class="text-xs text-gray-400">팟 게시글</p>
+                                </div>
+                                <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700 text-center">
+                                    <p class="text-2xl font-bold text-pink-500" id="profile-view-community-posts">0</p>
+                                    <p class="text-xs text-gray-400">커뮤니티 글</p>
+                                </div>
+                                <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700 text-center">
+                                    <p class="text-2xl font-bold text-pink-500" id="profile-view-comments">0</p>
+                                    <p class="text-xs text-gray-400">댓글</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                             <h4 class="text-lg font-bold text-pink-400">주요 스킬</h4>
+                             <div id="skill-chart-container" class="bg-gray-800/50 rounded-lg p-4 border border-gray-700 min-h-[150px]">
+                                <canvas id="skill-chart"></canvas>
+                                <p id="skill-chart-placeholder" class="text-gray-500 text-center py-10 hidden">등록된 스킬이 없습니다.</p>
+                             </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 border-t border-gray-700 pt-6">
+                        <h4 class="text-lg font-bold text-pink-400 mb-4 text-center">분야별 능력치</h4>
+                        <div id="ability-category-buttons" class="flex flex-wrap gap-2 mb-4 justify-center">
+                            </div>
+                        <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700 min-h-[300px] max-w-md mx-auto">
+                            <canvas id="ability-radar-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1">
+                        <button id="edit-profile-btn" class="hidden w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-3 rounded-lg hover:from-pink-500 hover:to-pink-600 transition font-bold md:col-span-2">
+                            프로필 수정
+                        </button>
+                    </div>
+                     </div>
+
+                <form id="profile-edit" class="hidden space-y-5">
+                    <div class="flex flex-col items-center gap-4">
+                        <img id="profile-edit-picture-preview" src="/static/default-avatar.png" alt="프로필 사진" 
+                            class="w-32 h-32 rounded-full border-4 border-pink-600 object-cover">
+                        <label class="cursor-pointer bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition border border-gray-700">
+                            <input type="file" name="profile_picture" accept="image/*" id="profile-picture-input" class="hidden">
+                            사진 변경
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">표시 이름</label>
+                        <input type="text" name="display_name" id="profile-edit-display-name" placeholder="표시할 이름을 입력하세요"
+                            class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">학번</label>
+                        <input type="text" name="student_id" id="profile-edit-student-id" placeholder="예: 1234"
+                            class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-2 text-pink-400">소개</label>
+                        <textarea name="bio" id="profile-edit-bio" rows="4" placeholder="자신을 소개해주세요"
+                            class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"></textarea>
+                    </div>
+
+                    <div>
+                        <h4 class="text-lg font-bold text-pink-400 mb-3">스킬 편집</h4>
+                        <div id="profile-edit-skills" class="space-y-4 max-h-64 overflow-y-auto pr-2">
+                            <p class="text-gray-500 text-center">스킬 목록을 불러오는 중...</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
+                        <button type="submit" class="bg-gradient-to-r from-pink-600 to-pink-500 text-white py-3 rounded-lg hover:from-pink-500 hover:to-pink-600 transition font-bold">
+                            저장
+                        </button>
+                        <button type="button" id="cancel-edit-profile-btn" class="bg-gray-800 text-white py-3 rounded-lg hover:bg-gray-700 transition font-bold border-2 border-gray-700">
+                            취소
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-preview-popup" class="fixed bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl border-2 border-pink-600/50 p-4 w-80 hidden z-[60]">
+        <div class="flex items-center gap-3 mb-3">
+            <img id="preview-picture" src="/static/default-avatar.png" alt="프로필" class="w-16 h-16 rounded-full border-2 border-pink-600 object-cover">
+            <div class="flex-1 min-w-0">
+                <h4 id="preview-display-name" class="font-bold text-white truncate"></h4>
+                <p id="preview-username" class="text-sm text-gray-400 truncate"></p>
+            </div>
+        </div>
+        <p id="preview-bio" class="text-sm text-gray-300 mb-3 line-clamp-3"></p>
+        <div class="flex gap-3 text-xs text-gray-400">
+            <span>팟 <strong id="preview-posts" class="text-pink-500">0</strong></span>
+            <span>•</span>
+            <span>글 <strong id="preview-community" class="text-pink-500">0</strong></span>
+            <span>•</span>
+            <span>댓글 <strong id="preview-comments" class="text-pink-500">0</strong></span>
+        </div>
+    </div>
 
     <div id="custom-alert-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[70] p-4 hidden">
          <div class="bg-gradient-to-br from-gray-900 to-black rounded-xl shadow-2xl max-w-sm w-full border-2 border-pink-600/50">
@@ -341,8 +569,7 @@
                 </div>
                 <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-bold mb-2 text-pink-400">이름</label>
-                        <input type="text" id="register-username" name="username" required placeholder="사용하실 이름을 입력하세요"
+                        <label class="block text-sm font-bold mb-2 text-pink-400">이름 (표시될 이름)</label> <input type="text" id="register-username" name="username" required placeholder="사용하실 이름을 입력하세요"
                             class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 text-white placeholder-gray-500"/>
                     </div>
                     <div>
