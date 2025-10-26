@@ -14,7 +14,7 @@ body {
 /* 채팅 메시지 컨테이너 스크롤바 스타일 */
 #chat-messages-container {
     scrollbar-width: thin;
-    scrollbar-color: #E53E85 #1f2937;
+    scrollbar-color: #E53E85 #1f2937; /* thumb track */
 }
 
 #chat-messages-container::-webkit-scrollbar {
@@ -22,18 +22,47 @@ body {
 }
 
 #chat-messages-container::-webkit-scrollbar-track {
-    background: #1f2937;
+    background: #1f2937; /* 어두운 배경 */
     border-radius: 4px;
 }
 
 #chat-messages-container::-webkit-scrollbar-thumb {
-    background: #E53E85;
+    background: #E53E85; /* 핑크색 */
     border-radius: 4px;
 }
 
 #chat-messages-container::-webkit-scrollbar-thumb:hover {
-    background: #d63577;
+    background: #d63577; /* 더 진한 핑크 */
 }
+
+/* --- ✨ [추가] 독립 스크롤 영역을 위한 공용 스크롤바 --- */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #E53E85 #1f2937; /* thumb track */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(31, 41, 55, 0.1); /* #1f2937의 반투명 버전 */
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #E53E85; /* 핑크색 */
+    border-radius: 4px;
+    border: 2px solid transparent; /* 얇아보이게 */
+    background-clip: content-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #d63577; /* 더 진한 핑크 */
+    background-clip: content-box;
+}
+/* --- ✨ [끝] --- */
+
 
 /* 텍스트 줄바꿈 제한 (line-clamp) */
 .line-clamp-2 {
@@ -41,6 +70,44 @@ body {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 프로필 미리보기 팝업 애니메이션 */
+#profile-preview-popup {
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+#profile-preview-popup.hidden {
+    opacity: 0;
+    transform: translateY(5px);
+    pointer-events: none;
+}
+
+/* ✨ 스킬 편집 슬라이더 썸 스타일 */
+.range-thumb-pink::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px; /* 썸 크기 */
+  height: 16px;
+  background: #ec4899; /* 핑크색 */
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.range-thumb-pink::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #ec4899;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none; /* Firefox 기본 테두리 제거 */
 }
 
 /* 애니메이션 */
